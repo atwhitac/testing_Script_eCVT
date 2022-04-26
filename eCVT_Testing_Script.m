@@ -12,22 +12,19 @@ lookuptable = table2array(readtable('eCVT Encoder Lookup Table.csv','NumHeaderLi
 global clampingForceFOS;
 clampingForceFOS = 0.5;
 global highRatio;
-highRatio = 4.496; %0 Ratio Percentage
+highRatio = 0.857; %0 Ratio Percentage
 global lowRatio;
-lowRatio = 0.857; %100 Ratio Percentage
+lowRatio = 4.496; %100 Ratio Percentage
 
 close all
 %% Constants
-
-
-
 
 
 %% Specify Data Location
 time               = column(1, testData);
 time               = (round((time-time(1))/10000))/100;
 sSpeed             = column(2, testData)*6.95;
-carSpeed           = column(2, testData)*3.1415*1.916/60; % ft/s     
+carSpeed           = column(2, testData)*3.1415*1.916/60;
 
 % Engine
 eState             = column(3, testData);  
@@ -56,20 +53,20 @@ sLoadCellP         = column(21, testData);
 sLoadCellI         = column(22, testData);
 sLoadCellD         = column(23, testData);
 
-slipRatio = zeros(length(time));
 i = 1;
+
+slipRatio = zeros(length(time),1);
+
 while(i<length(time))
     if(eState(i) > 1)
-       slipRatio(i) = sSpeed(i) / (eSpeed(i)/pEncoderToRatio(pEncoder(i))) - 1;
+       slipRatio(i) = (sSpeed(i) ./ (eSpeed(i)./pEncoderToRatio(pEncoder(i)))) - 1;
     end
     i = i + 1;
 end
 
-d1 = designfilt("lowpassiir",FilterOrder=12, ...
-    HalfPowerFrequency=0.15,DesignMethod="butter");
-filteredSlipRatio = filtfilt(d1,slipRatio);
 
-carDistance = cumtrapz(filtfilt(d1, carSpeed))/100; % ft
+
+carDistance = cumtrapz(carSpeed)/100; % ft
 
 eSetPoint          = 3500 * ones(length(time), 1);
 PIDZeroMark        = zeros(length(time), 1);
@@ -83,10 +80,10 @@ secondaryMaxClamp  = max(abs(sClampForce))
 primaryMaxClamp    = max(abs(pClampForce))
 engineSpeedMax     = max(abs(eSpeed))
 
-primaryAverageDraw = mean(pMotorCurrent(interp1(time,1:length(time),13,'nearest'):interp1(time,1:length(time),18,'nearest')))
-secondaryAverageDraw = mean(sMotorCurrent(interp1(time,1:length(time),13,'nearest'):interp1(time,1:length(time),18,'nearest')))
+primaryAverageDraw = mean(pMotorCurrent)%(interp1(time,1:length(time),13,'nearest'):interp1(time,1:length(time),18,'nearest')))
+secondaryAverageDraw = mean(sMotorCurrent)%(interp1(time,1:length(time),13,'nearest'):interp1(time,1:length(time),18,'nearest')))
 ratio = primaryAverageDraw/secondaryAverageDraw
-AverageRPM = mean(eSpeed(interp1(time,1:length(time),2,'nearest'):interp1(time,1:length(time),17,'nearest')))
+AverageRPM = mean(eSpeed)%(interp1(time,1:length(time),2,'nearest'):interp1(time,1:length(time),17,'nearest')))
 
 
 %% Engine Loop
@@ -113,11 +110,11 @@ primaryLoopTL = stackedplot(primaryData, primaryVars, 'XVariable','Time');
 %% Secondary Loop
 
 secondaryLoopFig = figure('Name', 'Secondary Loop Data', 'NumberTitle', 'off');
-secondaryData = array2table([time sEncoder sEncoderTarget sControllerOutput sEncoderPID sLoadCellPID sLoadCellP sLoadCellI sLoadCellD PIDZeroMark  sState sClampForce clampForceTarget sMotorCurrent filteredSlipRatio]);
-secondaryData = renamevars(secondaryData, ["Var1" "Var2" "Var3" "Var4" "Var5" "Var6" "Var7" "Var8" "Var9" "Var10" "Var11" "Var12" "Var13" "Var14" "Var15"], ["Time" "Secondary Encoder Ticks" "Secondary Encoder Ticks Target" "Secondary Controller Output" "sEncoderPID" "sLoadCellPID" "sLoadCellP" "sLoadCellI" "sLoadCellD" "PIDZeroMark" "Secondary State" "Secondary Force" "Target Force" "Motor Current" "Slip Ratio"]);
-secondaryVars = {'Secondary State', {'Secondary Encoder Ticks', 'Secondary Encoder Ticks Target'}, {'Secondary Controller Output', 'sEncoderPID', 'sLoadCellPID', 'PIDZeroMark'}, {'sLoadCellP', 'sLoadCellI', 'sLoadCellD', 'PIDZeroMark'}, {'Secondary Force', 'Target Force'}, 'Motor Current', 'Slip Ratio'};
+secondaryData = array2table([time sEncoder sEncoderTarget sControllerOutput sEncoderPID sLoadCellPID sLoadCellP sLoadCellI sLoadCellD PIDZeroMark  sState sClampForce clampForceTarget sMotorCurrent slipRatio]);
+secondaryData = renamevars(secondaryData, ["Var1" "Var2" "Var3" "Var4" "Var5" "Var6" "Var7" "Var8" "Var9" "Var10" "Var11" "Var12" "Var13" "Var14" "Var15"], ["Time" "Secondary Encoder Ticks" "Secondary Encoder Ticks Target" "Secondary Controller Output" "sEncoderPID" "sLoadCellPID" "sLoadCellP" "sLoadCellI" "sLoadCellD" "PIDZeroMark" "Secondary State" "Secondary Force" "Target Force" "Motor Current" "Unfiltered Slip Ratio"]);
+secondaryVars = {'Secondary State', {'Secondary Encoder Ticks', 'Secondary Encoder Ticks Target'}, {'Secondary Controller Output', 'sEncoderPID', 'sLoadCellPID', 'PIDZeroMark'}, {'sLoadCellP', 'sLoadCellI', 'sLoadCellD', 'PIDZeroMark'}, {'Secondary Force', 'Target Force'}, 'Motor Current', 'Unfiltered Slip Ratio'};
 secondaryLoopTL = stackedplot(secondaryData, secondaryVars, 'XVariable','Time');
-secondaryLoopTL.AxesProperties(7).YLimits = [-.3 .3];
+secondaryLoopTL.AxesProperties(7).YLimits = [-0.4 0.1];
 
 
 %% Load Cell Forces
@@ -195,7 +192,7 @@ else
 
     ratioPercent = ratioPercent1 + (ratioPercent2-ratioPercent1) * ( (pEncoder - pEncoder1) / (pEncoder2-pEncoder1) );
 
-    ratio = highRatio - ((highRatio-lowRatio)*(1-ratioPercent*0.01));
+    ratio = lowRatio - ((lowRatio-highRatio)*(1-ratioPercent*0.01));
 
     end
 end
