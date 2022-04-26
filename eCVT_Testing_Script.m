@@ -1,7 +1,7 @@
 %% eCVT Testing Script
 
 
-testData = uigetfile;  %<-Opens window to select file to be tested, make sure file is in MATLAB directory!!
+testData = uigetfile('*.csv');  %<-Opens window to select file to be tested, make sure file is in MATLAB directory!!
 
 
 
