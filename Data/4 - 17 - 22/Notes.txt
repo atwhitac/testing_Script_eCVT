@@ -1,0 +1,2 @@
+P0.02, I 0.1 - driver says it feels good, belt not clamped when stalled
+P0.02, I 0.2 - T1 no engine stall - could have braked a bit faster though, stalled on T2
