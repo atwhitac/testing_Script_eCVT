@@ -1,8 +1,14 @@
-% eCVT Testing Script
+%% eCVT Testing Script
+
+
+testData = uigetfile;  %<-Opens window to select file to be tested, make sure file is in MATLAB directory!!
+
+
+
+%% Global Variables
+
 global lookuptable;
 lookuptable = table2array(readtable('eCVT Encoder Lookup Table.csv','NumHeaderLines',1)); %<--- Lookup table .csv
-global testData;
-testData = 'P0.03I0.2D0.002.csv';  %<--- This is where input .csv goes
 global clampingForceFOS;
 clampingForceFOS = 0.5;
 global highRatio;
@@ -18,37 +24,37 @@ close all
 
 
 %% Specify Data Location
-time               = column(1);
+time               = column(1, testData);
 time               = (round((time-time(1))/10000))/100;
-sSpeed             = column(2)*6.95;
-carSpeed           = column(2)*3.1415*1.916/60; % ft/s     
+sSpeed             = column(2, testData)*6.95;
+carSpeed           = column(2, testData)*3.1415*1.916/60; % ft/s     
 
 % Engine
-eState             = column(3);  
-eSpeed             = column(4);            
-ePID               = column(5);  
-eP                 = column(6); 
-eI                 = column(7);
-eD                 = column(8);
+eState             = column(3, testData);  
+eSpeed             = column(4, testData);            
+ePID               = column(5, testData);  
+eP                 = column(6, testData); 
+eI                 = column(7, testData);
+eD                 = column(8, testData);
 
 % Primary
-pState             = column(9);
-pEncoder           = column(10);
-pClampForce        = column(11)*1.8333;
-pMotorCurrent      = column(12)/43.4;
-pControllerOutput  = column(13);
+pState             = column(9, testData);
+pEncoder           = column(10, testData);
+pClampForce        = column(11, testData)*1.8333;
+pMotorCurrent      = column(12, testData)/43.4;
+pControllerOutput  = column(13, testData);
 
 %Secondary
-sState             = column(14);
-sEncoder           = column(15);
-sClampForce        = column(16)*-1.8333;
-sMotorCurrent      = column(17)/43.4;
-sControllerOutput  = column(18);
-sEncoderPID        = column(19);
-sLoadCellPID       = column(20);
-sLoadCellP         = column(21);
-sLoadCellI         = column(22);
-sLoadCellD         = column(23);
+sState             = column(14, testData);
+sEncoder           = column(15, testData);
+sClampForce        = column(16, testData)*-1.8333;
+sMotorCurrent      = column(17, testData)/43.4;
+sControllerOutput  = column(18, testData);
+sEncoderPID        = column(19, testData);
+sLoadCellPID       = column(20, testData);
+sLoadCellP         = column(21, testData);
+sLoadCellI         = column(22, testData);
+sLoadCellD         = column(23, testData);
 
 slipRatio = zeros(length(time));
 i = 1;
@@ -130,9 +136,9 @@ legend("Primary", "Secondary");
 
 
 %% User Defined Functions
-function [x] = column(n)
-global testData;
-T = table2array(readtable(testData, 'NumHeaderLines',0));
+function [x] = column(n, tData)
+
+T = table2array(readtable(tData, 'NumHeaderLines',0));
 if n <= 0
     x = zeros(length(T(:,1)),1);
 else
